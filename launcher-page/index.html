@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reddit Comment Assistant - One-Click Launcher</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+    .container {
+      text-align: center;
+      padding: 40px;
+      max-width: 700px;
+      width: 100%;
+    }
+    h1 {
+      font-size: 36px;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #ff4500, #ff6b35);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .subtitle {
+      color: #8892b0;
+      margin-bottom: 30px;
+      font-size: 16px;
+    }
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+    .service {
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 20px 10px;
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: all 0.3s;
+    }
+    .service.running {
+      border-color: #4ade80;
+      box-shadow: 0 0 20px rgba(74,222,128,0.15);
+    }
+    .service.stopped { border-color: #333; }
+    .service.starting {
+      border-color: #ffa500;
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
+    .service-icon { font-size: 32px; margin-bottom: 8px; }
+    .service-name { font-size: 14px; font-weight: 600; }
+    .service-status { font-size: 11px; color: #888; margin-top: 4px; }
+    .service.running .service-status { color: #4ade80; }
+    .service.stopped .service-status { color: #f87171; }
+    .service.starting .service-status { color: #ffa500; }
+    
+    .btn-launch {
+      background: linear-gradient(135deg, #ff4500, #ff6b35);
+      color: white;
+      border: none;
+      padding: 18px 60px;
+      font-size: 20px;
+      font-weight: 700;
+      border-radius: 40px;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 10px 40px rgba(255,69,0,0.4);
+    }
+    .btn-launch:hover:not(:disabled) {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 50px rgba(255,69,0,0.5);
+    }
+    .btn-launch:disabled { background: #444; cursor: not-allowed; transform: none; }
+    .btn-launch.running { background: linear-gradient(135deg, #4ade80, #22c55e); }
+    
+    .progress-wrap { margin-top: 25px; }
+    .progress-steps {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
+    .step {
+      padding: 6px 14px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 20px;
+      font-size: 12px;
+      opacity: 0.4;
+      transition: all 0.3s;
+    }
+    .step.active { background: #ff4500; opacity: 1; }
+    .step.done { background: #4ade80; opacity: 1; }
+    .progress-bar {
+      height: 6px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ff4500, #ff6b35);
+      width: 0%;
+      transition: width 0.5s;
+    }
+    
+    .log-box {
+      margin-top: 25px;
+      background: rgba(0,0,0,0.4);
+      border-radius: 12px;
+      padding: 15px;
+      text-align: left;
+      max-height: 150px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      color: #888;
+    }
+    .log-line { margin-bottom: 3px; }
+    .log-line.s { color: #4ade80; }
+    .log-line.e { color: #f87171; }
+    .log-line.i { color: #60a5fa; }
+    
+    .links {
+      margin-top: 25px;
+      display: none;
+      gap: 15px;
+      justify-content: center;
+    }
+    .links a {
+      color: #ff4500;
+      text-decoration: none;
+      padding: 10px 25px;
+      border: 1px solid #ff4500;
+      border-radius: 25px;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+    .links a:hover { background: #ff4500; color: white; }
+    
+    .info-box {
+      margin-top: 25px;
+      background: rgba(255,165,0,0.1);
+      border: 1px solid rgba(255,165,0,0.3);
+      border-radius: 10px;
+      padding: 15px;
+      font-size: 13px;
+      color: #ffa500;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🚀 Reddit Comment Assistant</h1>
+    <p class="subtitle">One-Click Service Launcher</p>
+    
+    <div class="services-grid">
+      <div class="service stopped" id="svc-docker">
+        <div class="service-icon">🐳</div>
+        <div class="service-name">Docker</div>
+        <div class="service-status">Checking...</div>
+      </div>
+      <div class="service stopped" id="svc-mysql">
+        <div class="service-icon">🗄️</div>
+        <div class="service-name">MySQL</div>
+        <div class="service-status">Waiting</div>
+      </div>
+      <div class="service stopped" id="svc-redis">
+        <div class="service-icon">💾</div>
+        <div class="service-name">Redis</div>
+        <div class="service-status">Waiting</div>
+      </div>
+      <div class="service stopped" id="svc-api">
+        <div class="service-icon">⚡</div>
+        <div class="service-name">API</div>
+        <div class="service-status">Waiting</div>
+      </div>
+    </div>
+    
+    <button class="btn-launch" id="btn-launch" onclick="launchAll()">▶ Launch All Services</button>
+    
+    <div class="progress-wrap">
+      <div class="progress-steps">
+        <span class="step" id="step-1">1. Docker</span>
+        <span class="step" id="step-2">2. MySQL</span>
+        <span class="step" id="step-3">3. Redis</span>
+        <span class="step" id="step-4">4. Database</span>
+        <span class="step" id="step-5">5. API</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress"></div>
+      </div>
+    </div>
+    
+    <div class="log-box" id="log-box">
+      <div class="log-line i">System ready. Click "Launch All Services" to begin.</div>
+    </div>
+    
+    <div class="links" id="links">
+      <a href="http://localhost:8000/docs" target="_blank">📖 API Documentation</a>
+      <a href="http://localhost:8000/launcher" target="_blank">🎨 Launcher UI</a>
+    </div>
+    
+    <div class="info-box" id="info-box" style="display: none;">
+      💡 Services are running! Open the Chrome extension to start generating comments.
+    </div>
+  </div>
+
+  <script>
+    const API = 'http://localhost:8000';
+    let launching = false;
+    
+    function log(msg, type='') {
+      const box = document.getElementById('log-box');
+      const line = document.createElement('div');
+      line.className = 'log-line ' + type;
+      line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+      box.appendChild(line);
+      box.scrollTop = box.scrollHeight;
+    }
+    
+    function setStep(n, state) {
+      document.getElementById(`step-${n}`).className = `step ${state}`;
+    }
+    
+    function setProgress(p) {
+      document.getElementById('progress').style.width = p + '%';
+    }
+    
+    function setService(name, state, msg='') {
+      const el = document.getElementById(`svc-${name}`);
+      el.className = `service ${state}`;
+      el.querySelector('.service-status').textContent = msg;
+    }
+    
+    async function checkStatus() {
+      try {
+        const r = await fetch(`${API}/health`);
+        if (r.ok) {
+          setService('docker', 'running', 'Running');
+          setService('mysql', 'running', 'Running');
+          setService('redis', 'running', 'Running');
+          setService('api', 'running', 'Running');
+          const btn = document.getElementById('btn-launch');
+          btn.textContent = '✅ All Running';
+          btn.classList.add('running');
+          document.getElementById('links').style.display = 'flex';
+          document.getElementById('info-box').style.display = 'block';
+          log('All services already running!', 's');
+          return true;
+        }
+      } catch(e) {
+        setService('api', 'stopped', 'Stopped');
+      }
+      return false;
+    }
+    
+    async function launchAll() {
+      if (launching) return;
+      if (await checkStatus()) return;
+      
+      launching = true;
+      const btn = document.getElementById('btn-launch');
+      btn.disabled = true;
+      btn.textContent = '⏳ Launching...';
+      
+      log('Starting service launch sequence...', 'i');
+      
+      // Step 1 - Docker containers
+      setStep(1, 'active');
+      setService('docker', 'starting', 'Starting...');
+      log('Creating Docker containers...', 'i');
+      
+      try {
+        await fetch(`${API}/launch/start_mysql`, { method: 'POST' });
+        await fetch(`${API}/launch/start_redis`, { method: 'POST' });
+        setStep(1, 'done');
+        setService('docker', 'running', 'Running');
+        log('Docker containers ready', 's');
+      } catch(e) {
+        log('Docker failed: ' + e.message, 'e');
+        btn.disabled = false;
+        btn.textContent = '▶ Retry Launch';
+        launching = false;
+        return;
+      }
+      
+      // Step 2 - MySQL
+      setStep(2, 'active');
+      setService('mysql', 'starting', 'Starting...');
+      log('Waiting for MySQL...', 'i');
+      
+      for (let i = 0; i < 30; i++) {
+        const r = await fetch(`${API}/launch/wait_mysql`, { method: 'POST' });
+        const d = await r.json();
+        if (d.success) {
+          setStep(2, 'done');
+          setService('mysql', 'running', 'Running');
+          log('MySQL ready!', 's');
+          break;
+        }
+        await new Promise(r => setTimeout(r, 1000));
+      }
+      
+      // Step 3 - Redis
+      setStep(3, 'active');
+      setService('redis', 'starting', 'Starting...');
+      log('Starting Redis...', 'i');
+      
+      try {
+        const r = await fetch(`${API}/launch/start_redis`, { method: 'POST' });
+        setStep(3, 'done');
+        setService('redis', 'running', 'Running');
+        log('Redis ready!', 's');
+      } catch(e) {
+        log('Redis failed: ' + e.message, 'e');
+      }
+      
+      // Step 4 - Database
+      setStep(4, 'active');
+      log('Initializing database...', 'i');
+      
+      try {
+        await fetch(`${API}/launch/init_db`, { method: 'POST' });
+        setStep(4, 'done');
+        log('Database initialized', 's');
+      } catch(e) {
+        log('DB init failed: ' + e.message, 'e');
+      }
+      
+      // Step 5 - API
+      setStep(5, 'active');
+      setService('api', 'starting', 'Starting...');
+      log('Starting API server...', 'i');
+      
+      try {
+        await fetch(`${API}/launch/start_api`, { method: 'POST' });
+      } catch(e) {
+        log('API start failed: ' + e.message, 'e');
+      }
+      
+      // Wait for API to be ready
+      for (let i = 0; i < 30; i++) {
+        const ok = await checkStatus();
+        if (ok) {
+          setStep(5, 'done');
+          setProgress(100);
+          log('🎉 All services started successfully!', 's');
+          btn.textContent = '✅ All Running';
+          btn.classList.add('running');
+          document.getElementById('links').style.display = 'flex';
+          document.getElementById('info-box').style.display = 'block';
+          break;
+        }
+        await new Promise(r => setTimeout(r, 1000));
+        setProgress(Math.round((i / 30) * 100) + 50);
+      }
+      
+      btn.disabled = false;
+      launching = false;
+    }
+    
+    // Initial check
+    checkStatus();
+  </script>
+</body>
+</html>

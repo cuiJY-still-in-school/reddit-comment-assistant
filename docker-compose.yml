@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  mysql:
+    image: mariadb:11.8
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: reddit_comments
+      MYSQL_USER: reddit_user
+      MYSQL_PASSWORD: reddit_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+
+  redis:
+    image: redis:8.0-alpine
+    ports:
+      - "16379:6379"
+    volumes:
+      - redis_data:/data
+
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      MYSQL_HOST: mysql
+      REDIS_HOST: redis
+    env_file:
+      - .env
+    depends_on:
+      - mysql
+      - redis
+    volumes:
+      - .:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  mysql_data:
+  redis_data:

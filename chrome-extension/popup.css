@@ -1,0 +1,428 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  color: #333;
+  background: #fafafa;
+  min-width: 400px;
+  max-width: 480px;
+}
+
+.container {
+  padding: 16px;
+}
+
+.section {
+  margin-bottom: 16px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.status-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: white;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #666;
+}
+
+.status-dot.running {
+  background: #4ade80;
+  box-shadow: 0 0 6px #4ade80;
+}
+
+.status-dot.stopped {
+  background: #f87171;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.btn-start {
+  margin-left: auto;
+  background: #4ade80;
+  color: #166534;
+  font-size: 11px;
+  padding: 4px 10px;
+}
+
+.btn-start:hover {
+  background: #22c55e;
+}
+
+h1 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #ff4500;
+  margin-bottom: 16px;
+}
+
+h2, h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #555;
+}
+
+.input, .textarea, .select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  margin-bottom: 8px;
+  background: white;
+  transition: border-color 0.2s;
+}
+
+.input:focus, .textarea:focus, .select:focus {
+  outline: none;
+  border-color: #ff4500;
+}
+
+.textarea {
+  min-height: 100px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.btn {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn.primary {
+  background: #ff4500;
+  color: white;
+  width: 100%;
+}
+
+.btn.primary:hover:not(:disabled) {
+  background: #d63c00;
+}
+
+.btn.secondary {
+  background: #f0f0f0;
+  color: #333;
+  width: 100%;
+}
+
+.btn.secondary:hover:not(:disabled) {
+  background: #e0e0e0;
+}
+
+.btn.google {
+  background: #4285f4;
+  color: white;
+  width: 100%;
+}
+
+.btn.google:hover:not(:disabled) {
+  background: #357ae8;
+}
+
+.btn.small {
+  padding: 6px 12px;
+  font-size: 12px;
+  width: auto;
+}
+
+.btn.btn-start {
+  width: auto;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.tab {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.tab.active {
+  background: #ff4500;
+  color: white;
+  border-color: #ff4500;
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+.error {
+  color: #dc3545;
+  font-size: 13px;
+  margin-top: 8px;
+  padding: 8px;
+  background: #fee;
+  border-radius: 4px;
+}
+
+.message {
+  padding: 10px;
+  border-radius: 6px;
+  margin-top: 8px;
+  font-size: 13px;
+}
+
+.message.success {
+  background: #d4edda;
+  color: #155724;
+}
+
+.message.error {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.user-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background: #f5f5f5;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+
+.persona-section, .post-section {
+  background: white;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #eee;
+}
+
+.persona-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.persona-section h3 {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.persona-section .select {
+  flex: 1;
+  min-width: 200px;
+}
+
+.post-preview {
+  margin-bottom: 8px;
+}
+
+.post-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.post-meta .input {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.comment-card {
+  background: white;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.comment-content {
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 8px;
+  white-space: pre-wrap;
+}
+
+.comment-suggestion {
+  font-size: 12px;
+  color: #666;
+  font-style: italic;
+  margin-bottom: 8px;
+}
+
+.comment-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-copy {
+  background: #28a745;
+  color: white;
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.btn-copy:hover:not(:disabled) {
+  background: #218838;
+}
+
+.btn-copy.copied {
+  background: #28a745;
+  opacity: 0.7;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px;
+  color: #666;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #ff4500;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.hint {
+  color: #888;
+  font-size: 12px;
+  text-align: center;
+  padding: 8px;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 400px;
+}
+
+.modal-content h3 {
+  margin-bottom: 16px;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.modal-buttons .btn {
+  flex: 1;
+}
+
+.service-starting {
+  animation: blink 0.5s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.launcher-section {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  color: white;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.launcher-section h3 {
+  color: white;
+  margin-bottom: 8px;
+}
+
+.launcher-section p {
+  font-size: 12px;
+  opacity: 0.9;
+  margin-bottom: 12px;
+}
+
+.launcher-section .btn {
+  background: white;
+  color: #11998e;
+  font-weight: 600;
+}
+
+.launcher-section .btn:hover {
+  background: #f0f0f0;
+}

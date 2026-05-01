@@ -1,0 +1,45 @@
+# Environment
+.env
+.env.local
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+venv/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+server.log
+
+# Build artifacts
+*.egg-info/
+dist/
+build/
+
+# Chrome extension build
+chrome-extension/dist/
+
+# Node (if any)
+node_modules/
+
+# Database
+*.db
+*.sqlite
+
+# Docker
+.docker/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Rust target (if any)
+rust-core/target/
