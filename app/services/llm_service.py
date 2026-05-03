@@ -7,9 +7,9 @@ from typing import Optional
 
 
 MOCK_COMMENTS = [
-    {"content": "Great post! I totally agree with your perspective on this.", "suggestion": "Consider adding a personal anecdote to make it more engaging."},
-    {"content": "This is really insightful. Thanks for sharing your thoughts!", "suggestion": "You could add a question to encourage more interaction."},
-    {"content": "I had a similar experience. Thanks for bringing this up!", "suggestion": "Keep it concise - Reddit users love short, punchy comments."},
+    {"content": "Great post! I totally agree with your perspective on this.", "translation": "好帖！我完全同意你的观点。", "suggestion": "Consider adding a personal anecdote to make it more engaging."},
+    {"content": "This is really insightful. Thanks for sharing your thoughts!", "translation": "这真的很有见地。谢谢分享你的想法！", "suggestion": "You could add a question to encourage more interaction."},
+    {"content": "I had a similar experience. Thanks for bringing this up!", "translation": "我有类似的经历。谢谢你提出这个话题！", "suggestion": "Keep it concise - Reddit users love short, punchy comments."},
 ]
 
 

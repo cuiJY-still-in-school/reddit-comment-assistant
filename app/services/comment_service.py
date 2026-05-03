@@ -76,6 +76,7 @@ class CommentService:
                 post_id=post.id,
                 persona_id=persona_id,
                 content=item["content"],
+                translation=item.get("translation"),
                 suggestion=item.get("suggestion"),
                 status="unused",
             )
@@ -87,7 +88,7 @@ class CommentService:
             await self.db.refresh(cr)
 
         response_data = [
-            {"comment_id": cr.id, "content": cr.content, "suggestion": cr.suggestion}
+            {"comment_id": cr.id, "content": cr.content, "translation": cr.translation, "suggestion": cr.suggestion}
             for cr in saved_comments
         ]
         await cache_set(cache_key, json.dumps(response_data, ensure_ascii=False), CACHE_TTL)

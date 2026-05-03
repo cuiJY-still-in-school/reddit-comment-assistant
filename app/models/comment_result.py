@@ -11,5 +11,6 @@ class CommentResult(Base, TimestampMixin):
     post_id = Column(Integer, nullable=False, index=True, comment="关联帖子ID")
     persona_id = Column(Integer, nullable=True, comment="使用的人设ID(可为空)")
     content = Column(Text, nullable=False, comment="生成的评论内容")
+    translation = Column(Text, nullable=True, comment="中文翻译")
     suggestion = Column(String(200), nullable=True, comment="使用建议(如语气调整提示)")
     status = Column(String(20), nullable=False, server_default="unused", comment="状态: unused/used")
