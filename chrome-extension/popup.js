@@ -78,6 +78,14 @@ function updateServiceUI(service, running) {
 function showLoginSection() {
   document.getElementById('login-section').classList.remove('hidden');
   document.getElementById('app-section').classList.add('hidden');
+  switchLoginTab('email');
+}
+
+function switchLoginTab(tab) {
+  document.getElementById('tab-email').classList.toggle('active', tab === 'email');
+  document.getElementById('tab-cookie').classList.toggle('active', tab === 'cookie');
+  document.getElementById('email-login').classList.toggle('active', tab === 'email');
+  document.getElementById('cookie-login').classList.toggle('active', tab === 'cookie');
 }
 
 function showAppSection() {
@@ -92,6 +100,9 @@ function setupEventListeners() {
   document.getElementById('btn-start-all').addEventListener('click', handleStartServices);
   document.getElementById('btn-login').addEventListener('click', handleEmailLogin);
   document.getElementById('btn-register').addEventListener('click', handleRegister);
+  document.getElementById('btn-cookie-login').addEventListener('click', handleCookieLogin);
+  document.getElementById('tab-email').addEventListener('click', () => switchLoginTab('email'));
+  document.getElementById('tab-cookie').addEventListener('click', () => switchLoginTab('cookie'));
   document.getElementById('btn-logout').addEventListener('click', handleLogout);
   document.getElementById('btn-refresh-personas').addEventListener('click', loadPersonas);
   document.getElementById('btn-add-persona').addEventListener('click', showPersonaModal);
@@ -129,6 +140,43 @@ async function handleStartServices() {
 
   btn.disabled = false;
   await checkServiceStatus();
+}
+
+async function handleCookieLogin() {
+  const username = document.getElementById('cookie-username').value.trim();
+  const cookie = document.getElementById('cookie-value').value.trim();
+  const errorEl = document.getElementById('login-error');
+
+  errorEl.classList.add('hidden');
+
+  if (!username || !cookie) {
+    errorEl.textContent = 'Please fill in all fields';
+    errorEl.classList.remove('hidden');
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE}/api/auth/cookie-login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, cookie }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.detail || 'Login failed');
+    }
+
+    state.token = data.access_token;
+    state.user = data.user;
+    saveState();
+    showAppSection();
+    await loadPersonas();
+  } catch (error) {
+    errorEl.textContent = error.message;
+    errorEl.classList.remove('hidden');
+  }
 }
 
 async function handleEmailLogin() {

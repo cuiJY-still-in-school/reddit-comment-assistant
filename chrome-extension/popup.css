@@ -199,6 +199,36 @@ h2, h3 {
   display: block;
 }
 
+.tab-buttons {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.tab-btn.active {
+  background: #ff4500;
+  color: white;
+  border-color: #ff4500;
+}
+
+.cookie-hint {
+  display: block;
+  color: #888;
+  font-size: 11px;
+  margin-bottom: 8px;
+}
+
 .error {
   color: #dc3545;
   font-size: 13px;

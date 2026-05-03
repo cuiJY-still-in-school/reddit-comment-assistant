@@ -38,10 +38,10 @@ class LLMService:
 
     async def _call_deepseek(self, post_content: str, persona_description: Optional[str]) -> list[dict]:
         if persona_description:
-            system_prompt = f"You are a Reddit user with the following persona: {persona_description}"
-            user_prompt = f"Generate 3 natural Reddit comments for the following post. Reply ONLY with valid JSON array like [{{\"content\": \"comment1\", \"suggestion\": \"tip1\"}}, ...]:\n\n{post_content}"
+            system_prompt = f"You are a Reddit user with the following persona: {persona_description}. You MUST respond in English only."
+            user_prompt = f"Generate 3 natural Reddit comments in English for the following post. Reply ONLY with valid JSON array like [{{\"content\": \"comment1\", \"suggestion\": \"tip1\"}}, ...]:\n\n{post_content}"
         else:
-            system_prompt = "You are a friendly Reddit user who writes natural, authentic comments."
+            system_prompt = "You are a friendly Reddit user who writes natural, authentic comments. You MUST respond in English only."
             user_prompt = f"Generate 3 natural, authentic English Reddit comments for the following post. Reply ONLY with valid JSON array like [{{\"content\": \"comment1\", \"suggestion\": \"tip1\"}}, ...]:\n\n{post_content}"
 
         async with httpx.AsyncClient(timeout=self.timeout) as client:

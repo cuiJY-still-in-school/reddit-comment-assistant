@@ -97,6 +97,7 @@ uvicorn app.main:app --port 8000
 |----------|--------|-------------|
 | `/api/auth/register` | POST | Register user |
 | `/api/auth/login` | POST | Email login |
+| `/api/auth/cookie-login` | POST | Reddit cookie login |
 | `/api/auth/login/google` | POST | Google OAuth |
 | `/api/auth/me` | GET | Current user |
 | `/api/persona/create` | POST | Create persona |
@@ -142,9 +143,9 @@ Already built in `build-tools/dist/`
 
 ## ✨ Features
 
-- ✅ User authentication (email + Google OAuth)
+- ✅ User authentication (email + Reddit cookie + Google OAuth)
 - ✅ Persona management (max 5 per user)
-- ✅ DeepSeek AI comment generation
+- ✅ DeepSeek AI comment generation (English only)
 - ✅ Comment usage tracking
 - ✅ Redis caching (30 min TTL)
 - ✅ Rate limiting (10 req/min)

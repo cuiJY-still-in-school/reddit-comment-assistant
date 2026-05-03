@@ -74,3 +74,27 @@ class AuthService:
     async def get_user_by_id(self, user_id: int) -> Optional[User]:
         result = await self.db.execute(select(User).where(User.id == user_id))
         return result.scalar_one_or_none()
+
+    async def cookie_login(self, reddit_username: str, reddit_cookie: str) -> dict:
+        result = await self.db.execute(select(User).where(User.username == reddit_username))
+        user = result.scalar_one_or_none()
+
+        if not user:
+            user = User(
+                username=reddit_username,
+                email=f"{reddit_username}@reddit.local",
+                auth_method="reddit_cookie",
+            )
+            self.db.add(user)
+            await self.db.commit()
+            await self.db.refresh(user)
+
+        user.login_fail_count = 0
+        user.locked_until = None
+        user.last_login_at = datetime.now(timezone.utc)
+        await self.db.commit()
+
+        token = create_access_token(user.id)
+        await cache_set(f"token:{user.id}", token, settings.jwt_access_token_expire_minutes * 60)
+
+        return {"success": True, "user": user, "token": token}
