@@ -102,4 +102,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 chrome.runtime.onInstalled.addListener(() => {
   console.log('Reddit Comment Assistant installed');
+
+  chrome.contextMenus.create({
+    id: 'sendToCommentGenerator',
+    title: 'Send to Comment Generator',
+    contexts: ['selection']
+  });
+});
+
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId === 'sendToCommentGenerator' && info.selectionText) {
+    chrome.tabs.sendMessage(tab.id, {
+      action: 'textSelected',
+      text: info.selectionText
+    });
+  }
 });

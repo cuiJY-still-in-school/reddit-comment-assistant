@@ -4,22 +4,24 @@ AI-powered Reddit comment generation system with Chrome extension.
 
 ---
 
-## 🚀 Quick Start - Interactive Setup Wizard
+## 🚀 Quick Start
 
 ```bash
-# Linux / Mac
-chmod +x build-tools/setup_wizard.py
-python3 build-tools/setup_wizard.py
+# 1. Start infrastructure
+docker compose up -d mysql redis
 
-# Windows
-python build-tools/setup_wizard.py
+# 2. Install dependencies
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# 3. Configure API Key
+# Edit .env and add your DeepSeek API key:
+# DEEPSEEK_API_KEY=your-key-here
+
+# 4. Run
+uvicorn app.main:app --port 8000
 ```
-
-The wizard will guide you through:
-1. **Database Setup** - Starts MySQL & Redis via Docker
-2. **Python Environment** - Creates venv and installs packages
-3. **API Keys** - Optional: DeepSeek API for AI generation
-4. **Launch** - Starts the API server
 
 ---
 
@@ -48,7 +50,6 @@ reddit/
 │   └── main.py            # FastAPI entry
 ├── chrome-extension/       # Chrome Extension
 ├── build-tools/            # Build & Setup tools
-│   ├── setup_wizard.py    # ⭐ Interactive setup wizard
 │   ├── launcher.py        # PyInstaller launcher
 │   ├── install.sh         # Linux installer
 │   ├── install-mac.sh     # Mac installer
@@ -59,35 +60,18 @@ reddit/
 
 ---
 
-## 🔧 Development Setup
-
-### 1. Setup Wizard (Recommended)
-
-```bash
-python3 build-tools/setup_wizard.py
-```
-
-### 2. Manual Setup
-
-```bash
-# Start infrastructure
-docker compose up -d mysql redis
-
-# Install dependencies
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-
-# Run
-uvicorn app.main:app --port 8000
-```
-
-### 3. Chrome Extension
+## 🔧 Chrome Extension Setup
 
 1. Open `chrome://extensions/`
 2. Enable **Developer mode**
 3. Click **Load unpacked**
 4. Select `chrome-extension/` folder
+
+**Features:**
+- Right-click any selected text → "Send to Comment Generator"
+- Click floating button on Reddit pages to extract post
+- Generate English comments with Chinese translations
+- Multiple personas support
 
 ---
 
@@ -97,8 +81,6 @@ uvicorn app.main:app --port 8000
 |----------|--------|-------------|
 | `/api/auth/register` | POST | Register user |
 | `/api/auth/login` | POST | Email login |
-| `/api/auth/cookie-login` | POST | Reddit cookie login |
-| `/api/auth/login/google` | POST | Google OAuth |
 | `/api/auth/me` | GET | Current user |
 | `/api/persona/create` | POST | Create persona |
 | `/api/persona/list` | GET | List personas |
@@ -116,6 +98,7 @@ uvicorn app.main:app --port 8000
 ### DeepSeek (LLM)
 - Get key at: https://platform.deepseek.com/api_keys
 - Without it, mock comments will be used
+- Default model: `deepseek-v4-flash`
 
 ---
 
@@ -139,13 +122,14 @@ Already built in `build-tools/dist/`
 
 ## ✨ Features
 
-- ✅ User authentication (email + Reddit cookie)
+- ✅ User authentication (email + password)
 - ✅ Persona management (max 5 per user)
 - ✅ DeepSeek AI comment generation (English only)
+- ✅ Chinese translation for each comment (AI-powered)
 - ✅ Comment usage tracking
 - ✅ Redis caching (30 min TTL)
 - ✅ Rate limiting (10 req/min)
 - ✅ LLM circuit breaker
 - ✅ Chrome extension with DOM parsing
+- ✅ Right-click context menu to send selected text
 - ✅ Multi-selector fallback
-- ✅ Interactive setup wizard

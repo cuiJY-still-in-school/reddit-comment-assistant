@@ -12,11 +12,6 @@ class LoginRequest(BaseModel):
     password: str
 
 
-class CookieLoginRequest(BaseModel):
-    username: str
-    cookie: str
-
-
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"

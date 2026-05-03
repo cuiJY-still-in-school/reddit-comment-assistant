@@ -125,3 +125,17 @@ if (document.readyState === 'loading') {
 } else {
   createFloatingButton();
 }
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === 'getPostData') {
+    const postData = extractPostData();
+    sendResponse({ success: true, data: postData });
+  }
+  if (request.action === 'textSelected') {
+    chrome.storage.local.set({ selectedText: request.text }, () => {
+      sendResponse({ success: true });
+    });
+    return true;
+  }
+  return true;
+});

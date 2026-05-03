@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.services.auth_service import AuthService
 from app.schemas.auth import (
-    RegisterRequest, LoginRequest, CookieLoginRequest,
+    RegisterRequest, LoginRequest,
     TokenResponse, UserResponse,
 )
 from app.schemas.common import CommonResponse
@@ -63,24 +63,4 @@ async def get_me(user_id: int = Depends(get_current_user_id), db: AsyncSession =
         email=user.email,
         auth_method=user.auth_method,
         last_login_at=str(user.last_login_at) if user.last_login_at else None,
-    )
-
-
-@router.post("/cookie-login", response_model=TokenResponse)
-async def cookie_login(req: CookieLoginRequest, db: AsyncSession = Depends(get_db)):
-    service = AuthService(db)
-    result = await service.cookie_login(req.username, req.cookie)
-    if not result["success"]:
-        raise HTTPException(status_code=401, detail=result["message"])
-    user = result["user"]
-    return TokenResponse(
-        access_token=result["token"],
-        expires_in=86400,
-        user=UserResponse(
-            id=user.id,
-            username=user.username,
-            email=user.email,
-            auth_method=user.auth_method,
-            last_login_at=str(user.last_login_at) if user.last_login_at else None,
-        ),
     )
