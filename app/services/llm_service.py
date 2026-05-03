@@ -22,23 +22,20 @@ class LLMService:
 
     async def generate_comments(self, post_content: str, persona_description: Optional[str]) -> list[dict]:
         if not self.api_key:
+            print("[LLM] No API key, using mock")
             return MOCK_COMMENTS
 
-        if not llm_circuit_breaker.can_execute():
+        try:
+            result = await self._call_deepseek(post_content, persona_description)
+            print(f"[LLM] DeepSeek returned {len(result)} comments")
+            for i, c in enumerate(result):
+                print(f"[LLM]   [{i}] translation={c.get('translation', 'MISSING')[:30] if c.get('translation') else 'MISSING'}...")
+            llm_circuit_breaker.record_success()
+            return result
+        except Exception as e:
+            print(f"[LLM] Error: {e}")
+            llm_circuit_breaker.record_failure()
             return MOCK_COMMENTS
-
-        async with llm_queue:
-            try:
-                result = await self._call_deepseek(post_content, persona_description)
-                llm_circuit_breaker.record_success()
-                for c in result:
-                    if not c.get("translation"):
-                        c["translation"] = "Translation unavailable"
-                return result
-            except Exception as e:
-                print(f"[LLM] Error: {e}")
-                llm_circuit_breaker.record_failure()
-                return MOCK_COMMENTS
 
     async def _call_deepseek(self, post_content: str, persona_description: Optional[str]) -> list[dict]:
         system_msg = "You are a Reddit comment generator. Generate comments in English. For each comment, provide: content (English), translation (Chinese), suggestion (English)."
@@ -50,6 +47,9 @@ class LLMService:
 Output as JSON array. No markdown. No code blocks. Just plain JSON.
 
 Post: {post_content}"""
+
+        print(f"[LLM] Calling {self.model} at {self.api_base}")
+        print(f"[LLM] API key prefix: {self.api_key[:15]}...")
 
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             response = await client.post(
@@ -67,11 +67,15 @@ Post: {post_content}"""
                     "temperature": 0.8,
                 },
             )
+            print(f"[LLM] Response status: {response.status_code}")
             response.raise_for_status()
             data = response.json()
             raw = data["choices"][0]["message"]["content"]
+            print(f"[LLM] Raw response length: {len(raw)}")
+            print(f"[LLM] Raw response preview: {raw[:150]}...")
             raw = raw.strip().strip("```").strip("json").strip()
-            return json.loads(raw)
+            result = json.loads(raw)
+            return result
 
 
 llm_service = LLMService()

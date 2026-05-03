@@ -68,6 +68,9 @@ class CommentService:
         post = await self._get_or_create_post(user_id, post_content, permalink)
 
         comments = await self._call_llm(post_content, persona_description)
+        print(f"[CommentService] LLM returned {len(comments)} comments")
+        for i, c in enumerate(comments):
+            print(f"[CommentService]   comment[{i}] translation={c.get('translation', 'MISSING')[:50] if c.get('translation') else 'MISSING'}...")
 
         saved_comments = []
         for item in comments:
@@ -86,11 +89,13 @@ class CommentService:
         await self.db.commit()
         for cr in saved_comments:
             await self.db.refresh(cr)
+            print(f"[CommentService] after refresh: translation={cr.translation[:50] if cr.translation else 'NULL'}...")
 
         response_data = [
             {"comment_id": cr.id, "content": cr.content, "translation": cr.translation, "suggestion": cr.suggestion}
             for cr in saved_comments
         ]
+        print(f"[CommentService] response_data: {response_data[0] if response_data else 'EMPTY'}")
         await cache_set(cache_key, json.dumps(response_data, ensure_ascii=False), CACHE_TTL)
 
         return {"success": True, "comments": response_data, "persona_name": persona_name, "cached": False}
