@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     # DeepSeek
     deepseek_api_key: str = ""
     deepseek_api_base: str = "https://api.deepseek.com"
-    deepseek_model: str = "deepseek-chat"
+    deepseek_model: str = "deepseek-v4-flash"
     deepseek_timeout: int = 10
 
     # Rate Limiting
