@@ -113,6 +113,12 @@ Post: {post_content}"""
                 data = response.json()
                 content = data["choices"][0]["message"]["content"]
                 print(f"[LLM] Raw response: {content[:300]}...")
+                content = content.strip()
+                if content.startswith("```"):
+                    content = content.split("```")[1]
+                    if content.startswith("json"):
+                        content = content[4:]
+                content = content.strip()
                 comments = json.loads(content)
                 return comments
         except Exception as e:
