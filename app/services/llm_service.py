@@ -48,41 +48,31 @@ class LLMService:
     async def _call_deepseek(self, post_content: str, persona_description: Optional[str]) -> list[dict]:
         if persona_description:
             system_prompt = f"""You are a Reddit user with the following persona: {persona_description}.
-CRITICAL: You MUST write ALL comments in ENGLISH ONLY. Never write in Chinese, Korean, Japanese, or any other language.
-The 'translation' field should contain the CHINESE TRANSLATION of the English comment, not a new comment."""
-            user_prompt = f"""Generate EXACTLY 3 Reddit comments in English for this post.
+Write ALL comments in English only. The 'translation' field must be Chinese translation of 'content' field."""
+            user_prompt = f"""Generate 3 Reddit comments in English. For EACH comment output a JSON object with EXACTLY 3 fields:
 
-For EACH comment you MUST provide:
-1. "content" - The English comment text (MUST be in English)
-2. "translation" - Chinese translation of the English comment above
-3. "suggestion" - Usage tip in English
+1. "content": English text of comment
+2. "translation": Chinese translation of the content field ONLY
+3. "suggestion": English tip
 
-Example output:
-[{{"content": "This is great!", "translation": "这太棒了！", "suggestion": "Add an emoji"}}, ...]
-
-NEVER write comments in Chinese. The 'content' and 'suggestion' fields MUST be in English.
+Output as JSON array like this (EACH comment must have all 3 fields):
+[{{"content":"English here","translation":"中文翻译","suggestion":"English tip"}}, ...]
 
 Post: {post_content}"""
         else:
-            system_prompt = """You are a friendly Reddit user.
-CRITICAL: You MUST write ALL comments in ENGLISH ONLY. Never write in Chinese, Korean, Japanese, or any other language.
-The 'translation' field should contain the CHINESE TRANSLATION of the English comment, not a new comment."""
-            user_prompt = f"""Generate EXACTLY 3 Reddit comments in English for this post.
+            system_prompt = """You are a friendly Reddit user. Write all comments in English. The 'translation' field is Chinese translation of 'content' field only."""
+            user_prompt = f"""Generate 3 Reddit comments in English. For EACH comment output a JSON object with EXACTLY 3 fields:
 
-For EACH comment you MUST provide:
-1. "content" - The English comment text (MUST be in English)
-2. "translation" - Chinese translation of the English comment above
-3. "suggestion" - Usage tip in English
+1. "content": English text of comment
+2. "translation": Chinese translation of the content field ONLY
+3. "suggestion": English tip
 
-Example output:
-[{{"content": "This is great!", "translation": "这太棒了！", "suggestion": "Add an emoji"}}, ...]
-
-NEVER write comments in Chinese. The 'content' and 'suggestion' fields MUST be in English.
+Output as JSON array like this (EACH comment must have all 3 fields):
+[{{"content":"English here","translation":"中文翻译","suggestion":"English tip"}}, ...]
 
 Post: {post_content}"""
 
-        print(f"[LLM] Calling DeepSeek model={self.model}")
-        print(f"[LLM] API Base: {self.api_base}")
+        print(f"[LLM] Calling model={self.model}")
 
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             response = await client.post(
@@ -100,15 +90,11 @@ Post: {post_content}"""
                     "temperature": 0.8,
                 },
             )
-            print(f"[LLM] Response status: {response.status_code}")
             response.raise_for_status()
             data = response.json()
             content = data["choices"][0]["message"]["content"]
             print(f"[LLM] Raw response: {content[:500]}...")
             comments = json.loads(content)
-            for c in comments:
-                if "translation" not in c or not c["translation"]:
-                    c["translation"] = "翻译暂不可用"
             return comments
 
 
