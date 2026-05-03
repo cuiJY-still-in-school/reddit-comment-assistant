@@ -25,10 +25,6 @@ class Settings(BaseSettings):
     deepseek_model: str = "deepseek-chat"
     deepseek_timeout: int = 10
 
-    # Google OAuth
-    google_client_id: str = ""
-    google_client_secret: str = ""
-
     # Rate Limiting
     rate_limit_per_minute: int = 10
     llm_concurrent_limit: int = 5

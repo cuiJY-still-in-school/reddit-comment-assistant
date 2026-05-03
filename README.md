@@ -117,10 +117,6 @@ uvicorn app.main:app --port 8000
 - Get key at: https://platform.deepseek.com/api_keys
 - Without it, mock comments will be used
 
-### Google OAuth (Optional)
-- Create project at: https://console.cloud.google.com/
-- Enables social login feature
-
 ---
 
 ## 🏗️ Building Executables
@@ -143,7 +139,7 @@ Already built in `build-tools/dist/`
 
 ## ✨ Features
 
-- ✅ User authentication (email + Reddit cookie + Google OAuth)
+- ✅ User authentication (email + Reddit cookie)
 - ✅ Persona management (max 5 per user)
 - ✅ DeepSeek AI comment generation (English only)
 - ✅ Comment usage tracking
