@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     deepseek_timeout: int = 10
 
     # Rate Limiting
-    rate_limit_per_minute: int = 10
+    rate_limit_per_minute: int = 60
     llm_concurrent_limit: int = 5
     circuit_breaker_threshold: int = 5
     circuit_breaker_recovery_seconds: int = 60
