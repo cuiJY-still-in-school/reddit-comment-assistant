@@ -11,6 +11,7 @@ class GenerateCommentRequest(BaseModel):
 class CommentResponse(BaseModel):
     comment_id: int
     content: str
+    translation: Optional[str] = None
     suggestion: Optional[str] = None
 
 
