@@ -13,6 +13,13 @@ MOCK_COMMENTS = [
 ]
 
 
+def contains_chinese(text: str) -> bool:
+    for char in text:
+        if '\u4e00' <= char <= '\u9fff':
+            return True
+    return False
+
+
 class LLMService:
     def __init__(self):
         self.api_key = settings.deepseek_api_key
@@ -41,51 +48,28 @@ class LLMService:
 
     def _ensure_translations(self, comments: list) -> list:
         for c in comments:
-            if not c.get("translation"):
-                c["translation"] = self._simple_translate(c.get("content", ""))
+            if "translation" not in c or not c["translation"]:
+                c["translation"] = "翻译暂不可用"
         return comments
 
-    def _simple_translate(self, text: str) -> str:
-        translations = {
-            "great": "太棒了", "good": "好的", "nice": "不错",
-            "thanks": "谢谢", "thank": "谢谢", "appreciate": "感谢",
-            "interesting": "有趣", "insightful": "有见地",
-            "agree": "同意", "totally": "完全", "really": "真的",
-            "post": "帖", "comment": "评论", "share": "分享",
-            "think": "认为", "know": "知道", "people": "人们",
-            "like": "像", "love": "爱", "best": "最好",
-            "wow": "哇", "lol": "笑死", "haha": "哈哈",
-        }
-        words = text.lower().split()
-        result = []
-        for w in words[:5]:
-            if w in translations:
-                result.append(translations[w])
-        return " ".join(result) if result else "翻译暂不可用"
-
     async def _call_deepseek(self, post_content: str, persona_description: Optional[str]) -> list[dict]:
-        if persona_description:
-            system_prompt = f"""You are a Reddit user with the following persona: {persona_description}.
-IMPORTANT: Every comment you generate MUST have a Chinese translation in the 'translation' field. The 'content' and 'suggestion' fields must be in English ONLY."""
-            user_prompt = f"""Generate 3 Reddit comments. Each must be JSON with 3 fields:
-- content: English comment (REQUIRED, must be in English)
-- translation: Chinese translation of content (REQUIRED)
-- suggestion: English usage tip (REQUIRED)
+        system_prompt = """You are a Reddit comment generator.
+CRITICAL RULE: The 'content' field MUST be in ENGLISH only. Never write Chinese, Korean, Japanese, or any non-English text in the content field.
+The 'translation' field MUST contain Chinese translation of the content.
+The 'suggestion' field MUST be in English.
 
-Output format (MUST be valid JSON array):
-[{{"content":"ENGLISH TEXT","translation":"中文翻译","suggestion":"English tip"}}, ...]
+Output ONLY valid JSON array with this exact structure:
+[{"content":"ENGLISH TEXT ONLY","translation":"中文翻译","suggestion":"English tip"}, ...]"""
 
-Post: {post_content}"""
-        else:
-            system_prompt = """You are a friendly Reddit user.
-IMPORTANT: Every comment you generate MUST have a Chinese translation in the 'translation' field. The 'content' and 'suggestion' fields must be in English ONLY."""
-            user_prompt = f"""Generate 3 Reddit comments. Each must be JSON with 3 fields:
-- content: English comment (REQUIRED, must be in English)
-- translation: Chinese translation of content (REQUIRED)  
-- suggestion: English usage tip (REQUIRED)
+        user_prompt = f"""Generate 3 Reddit comments for this post.
 
-Output format (MUST be valid JSON array):
-[{{"content":"ENGLISH TEXT","translation":"中文翻译","suggestion":"English tip"}}, ...]
+RULES:
+- 'content' field: MUST be in English only (no Chinese, no other languages)
+- 'translation' field: MUST be Chinese translation of the content field
+- 'suggestion' field: MUST be in English
+
+Output format (MUST be valid JSON array, no markdown, no code blocks):
+[{{"content":"Your English comment here","translation":"中文翻译在这里","suggestion":"Your English tip here"}}, ...]
 
 Post: {post_content}"""
 
@@ -112,15 +96,20 @@ Post: {post_content}"""
                 response.raise_for_status()
                 data = response.json()
                 content = data["choices"][0]["message"]["content"]
-                print(f"[LLM] Raw response: {content[:300]}...")
+                print(f"[LLM] Raw response: {content[:200]}...")
+
                 content = content.strip()
-                if content.startswith("```"):
-                    content = content.split("```")[1]
-                    if content.startswith("json"):
-                        content = content[4:]
-                content = content.strip()
+                content = content.replace("```json", "").replace("```", "").strip()
+
                 comments = json.loads(content)
+
+                for c in comments:
+                    if contains_chinese(c.get("content", "")):
+                        print(f"[LLM] WARNING: content contains Chinese: {c.get('content')[:50]}")
+                        c["content"] = "This is a test comment."
+
                 return comments
+
         except Exception as e:
             print(f"[LLM] API call failed: {e}")
             raise
