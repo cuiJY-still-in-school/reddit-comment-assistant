@@ -47,29 +47,37 @@ class LLMService:
 
     async def _call_deepseek(self, post_content: str, persona_description: Optional[str]) -> list[dict]:
         if persona_description:
-            system_prompt = f"You are a Reddit user with the following persona: {persona_description}. You MUST respond in English only."
-            user_prompt = f"""Generate EXACTLY 3 natural Reddit comments in English for the following post. You MUST include Chinese translations for EVERY comment.
+            system_prompt = f"""You are a Reddit user with the following persona: {persona_description}.
+CRITICAL: You MUST write ALL comments in ENGLISH ONLY. Never write in Chinese, Korean, Japanese, or any other language.
+The 'translation' field should contain the CHINESE TRANSLATION of the English comment, not a new comment."""
+            user_prompt = f"""Generate EXACTLY 3 Reddit comments in English for this post.
 
-For EACH comment, provide:
-- content: the English comment
-- translation: the Chinese translation  
-- suggestion: a usage tip
+For EACH comment you MUST provide:
+1. "content" - The English comment text (MUST be in English)
+2. "translation" - Chinese translation of the English comment above
+3. "suggestion" - Usage tip in English
 
-Output format - JSON array with EXACTLY this structure:
-[{{"content": "English comment here", "translation": "中文翻译在这里", "suggestion": "tip here"}}, ...]
+Example output:
+[{{"content": "This is great!", "translation": "这太棒了！", "suggestion": "Add an emoji"}}, ...]
+
+NEVER write comments in Chinese. The 'content' and 'suggestion' fields MUST be in English.
 
 Post: {post_content}"""
         else:
-            system_prompt = "You are a friendly Reddit user who writes natural, authentic comments. You MUST respond in English only."
-            user_prompt = f"""Generate EXACTLY 3 natural Reddit comments in English for the following post. You MUST include Chinese translations for EVERY comment.
+            system_prompt = """You are a friendly Reddit user.
+CRITICAL: You MUST write ALL comments in ENGLISH ONLY. Never write in Chinese, Korean, Japanese, or any other language.
+The 'translation' field should contain the CHINESE TRANSLATION of the English comment, not a new comment."""
+            user_prompt = f"""Generate EXACTLY 3 Reddit comments in English for this post.
 
-For EACH comment, provide:
-- content: the English comment
-- translation: the Chinese translation
-- suggestion: a usage tip
+For EACH comment you MUST provide:
+1. "content" - The English comment text (MUST be in English)
+2. "translation" - Chinese translation of the English comment above
+3. "suggestion" - Usage tip in English
 
-Output format - JSON array with EXACTLY this structure:
-[{{"content": "English comment here", "translation": "中文翻译在这里", "suggestion": "tip here"}}, ...]
+Example output:
+[{{"content": "This is great!", "translation": "这太棒了！", "suggestion": "Add an emoji"}}, ...]
+
+NEVER write comments in Chinese. The 'content' and 'suggestion' fields MUST be in English.
 
 Post: {post_content}"""
 
