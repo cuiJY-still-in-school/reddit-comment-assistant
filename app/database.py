@@ -20,5 +20,12 @@ async def get_db() -> AsyncSession:
 
 
 async def init_db():
+    from app.models.user import User
+    from app.models.persona import Persona
+    from app.models.post_record import PostRecord
+    from app.models.comment_result import CommentResult
+    from app.models.style_sample import StyleSample
+    from app.models.style_profile import StyleProfile
+
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

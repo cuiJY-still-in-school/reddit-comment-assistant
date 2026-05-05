@@ -48,6 +48,7 @@ class CommentService:
         post_content: str,
         permalink: Optional[str],
         persona_id: Optional[int],
+        style_profile: Optional[dict] = None,
     ) -> dict:
         cache_key = self._make_cache_key(post_content, persona_id)
         cached = await cache_get(cache_key)
@@ -67,7 +68,7 @@ class CommentService:
 
         post = await self._get_or_create_post(user_id, post_content, permalink)
 
-        comments = await self._call_llm(post_content, persona_description)
+        comments = await self._call_llm(post_content, persona_description, style_profile)
         print(f"[CommentService] LLM returned {len(comments)} comments")
         for i, c in enumerate(comments):
             print(f"[CommentService]   comment[{i}] translation={c.get('translation', 'MISSING')[:50] if c.get('translation') else 'MISSING'}...")
@@ -100,9 +101,9 @@ class CommentService:
 
         return {"success": True, "comments": response_data, "persona_name": persona_name, "cached": False}
 
-    async def _call_llm(self, post_content: str, persona_description: Optional[str]) -> list[dict]:
+    async def _call_llm(self, post_content: str, persona_description: Optional[str], style_profile: Optional[dict] = None) -> list[dict]:
         from app.services.llm_service import llm_service
-        return await llm_service.generate_comments(post_content, persona_description)
+        return await llm_service.generate_comments(post_content, persona_description, style_profile)
 
     async def mark_used(self, user_id: int, comment_id: int) -> dict:
         result = await self.db.execute(

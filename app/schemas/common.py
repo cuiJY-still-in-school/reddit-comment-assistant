@@ -11,3 +11,9 @@ class ErrorResponse(BaseModel):
     success: bool = False
     message: str
     detail: str | None = None
+
+
+class ListResponse(BaseModel):
+    success: bool = True
+    list: list
+    total: int = 0

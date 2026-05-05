@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.services.comment_service import CommentService
+from app.services.style_learner import StyleLearner
 from app.schemas.comment import (
     GenerateCommentRequest, GenerateCommentResponse, CommentResponse,
     MarkUsedRequest, MarkUsedResponse,
@@ -26,8 +27,12 @@ async def generate_comment(
     if not allowed:
         raise HTTPException(status_code=429, detail="请求过于频繁，请稍后重试")
 
+    style_profile = None
+    learner = StyleLearner(db)
+    style_profile = await learner.get_user_profile(user_id)
+
     service = CommentService(db)
-    result = await service.generate(user_id, req.post_content, req.permalink, req.persona_id)
+    result = await service.generate(user_id, req.post_content, req.permalink, req.persona_id, style_profile)
     if not result["success"]:
         raise HTTPException(status_code=400, detail=result.get("message", "生成失败"))
 

@@ -11,6 +11,7 @@ from app.utils.rate_limiter import init_rate_limiter
 from app.api.auth import router as auth_router
 from app.api.persona import router as persona_router
 from app.api.comment import router as comment_router
+from app.api.style import router as style_router
 
 
 APP_NAME = "RedditCommentAssistant"
@@ -131,6 +132,7 @@ app = FastAPI(
 app.include_router(auth_router)
 app.include_router(persona_router)
 app.include_router(comment_router)
+app.include_router(style_router)
 
 
 @app.exception_handler(HTTPException)
