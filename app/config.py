@@ -19,11 +19,11 @@ class Settings(BaseSettings):
     jwt_secret_key: str = "your-jwt-secret-key-change-in-production"
     jwt_access_token_expire_minutes: int = 1440
 
-    # DeepSeek
-    deepseek_api_key: str = ""
-    deepseek_api_base: str = "https://api.deepseek.com"
-    deepseek_model: str = "grok-3"
-    deepseek_timeout: int = 10
+    # xAI (Grok)
+    xai_api_key: str = ""
+    xai_api_base: str = "https://api.x.ai"
+    xai_model: str = "grok-3-mini"
+    xai_timeout: int = 30
 
     # Rate Limiting
     rate_limit_per_minute: int = 60

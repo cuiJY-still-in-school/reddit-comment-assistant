@@ -15,10 +15,10 @@ MOCK_COMMENTS = [
 
 class LLMService:
     def __init__(self):
-        self.api_key = settings.deepseek_api_key
-        self.api_base = settings.deepseek_api_base
-        self.model = settings.deepseek_model
-        self.timeout = settings.deepseek_timeout
+        self.api_key = settings.xai_api_key
+        self.api_base = settings.xai_api_base
+        self.model = settings.xai_model
+        self.timeout = settings.xai_timeout
 
     async def generate_comments(self, post_content: str, persona_description: Optional[str]) -> list[dict]:
         if not self.api_key:
