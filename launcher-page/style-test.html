@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Style Learning Test</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e;
+      min-height: 100vh;
+      color: #d7d7d7;
+      padding: 20px;
+    }
+    h1 { color: #ff4500; margin-bottom: 20px; font-size: 24px; }
+    h2 { color: #fff; margin: 20px 0 10px; font-size: 16px; }
+    .section {
+      background: #272729;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .login-box {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      background: #1a1a1b;
+      border: 1px solid #343536;
+      border-radius: 6px;
+      color: #d7d7d7;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #ff4500;
+    }
+    button {
+      background: #ff4500;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    button:hover { background: #d63c00; }
+    button:disabled { background: #555; cursor: not-allowed; }
+    .btn-secondary { background: #343536; }
+    .posts-list { max-height: 300px; overflow-y: auto; }
+    .post-item {
+      background: #1a1a1b;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      border: 1px solid #343536;
+    }
+    .post-item:hover { border-color: #ff4500; }
+    .post-item.selected { border-color: #ff4500; background: #2a2a2c; }
+    .post-title { font-weight: 600; margin-bottom: 5px; color: #fff; }
+    .post-meta { font-size: 12px; color: #818384; }
+    .comment-box { display: none; }
+    .comment-box.active { display: block; }
+    .profile-info {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .profile-item {
+      background: #1a1a1b;
+      padding: 10px;
+      border-radius: 6px;
+      text-align: center;
+    }
+    .profile-item .value { font-size: 20px; font-weight: bold; color: #ff4500; }
+    .profile-item .label { font-size: 11px; color: #818384; margin-top: 4px; }
+    pre { background: #1a1a1b; padding: 10px; border-radius: 6px; font-size: 12px; overflow-x: auto; max-height: 200px; }
+    .success { color: #4ade80; }
+    .error { color: #f87171; }
+    .info { color: #60a5fa; }
+  </style>
+</head>
+<body>
+  <h1>🎭 Style Learning Test</h1>
+
+  <div class="section">
+    <h2>🔐 Login</h2>
+    <div class="login-box">
+      <input type="email" id="email" placeholder="Email" value="shortsubjayfire@gmail.com">
+      <input type="password" id="password" placeholder="Password" value="cuiJY20130111">
+      <button onclick="login()">Login</button>
+    </div>
+    <div id="login-status"></div>
+  </div>
+
+  <div class="section">
+    <h2>📝 Get Posts</h2>
+    <div style="display: flex; gap: 10px;">
+      <input type="text" id="subreddit" placeholder="Subreddit (e.g., askreddit)" value="askreddit">
+      <select id="sort">
+        <option value="hot">Hot</option>
+        <option value="new">New</option>
+        <option value="top">Top</option>
+      </select>
+      <button onclick="fetchPosts()">Fetch Posts</button>
+    </div>
+    <div class="posts-list" id="posts-list"></div>
+  </div>
+
+  <div class="section comment-box" id="comment-section">
+    <h2>✍️ Write Your Comment</h2>
+    <div id="selected-post"></div>
+    <textarea id="user-comment" placeholder="Write your comment here..." rows="3"></textarea>
+    <button onclick="submitSample()">Submit Sample</button>
+    <button onclick="clearSelection()" class="btn-secondary">Clear</button>
+  </div>
+
+  <div class="section">
+    <h2>📊 Your Style Profile</h2>
+    <button onclick="getProfile()">Refresh Profile</button>
+    <button onclick="analyzeStyle()" class="btn-secondary">Analyze Style</button>
+    <div id="profile-display"></div>
+  </div>
+
+  <div class="section">
+    <h2>📋 My Samples</h2>
+    <button onclick="getSamples()">Load Samples</button>
+    <div id="samples-list"></div>
+  </div>
+
+  <div class="section">
+    <h2>🔧 Debug</h2>
+    <button onclick="testGenerate()">Test Generate with Style</button>
+    <pre id="debug-output"></pre>
+  </div>
+
+<script>
+const API = 'http://localhost:8000';
+let token = '';
+let selectedPost = null;
+let posts = [];
+
+async function login() {
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  const status = document.getElementById('login-status');
+
+  try {
+    const r = await fetch(`${API}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const d = await r.json();
+    if (d.access_token) {
+      token = d.access_token;
+      status.innerHTML = `<span class="success">✅ Logged in as ${d.user.email}</span>`;
+    } else {
+      status.innerHTML = `<span class="error">❌ Login failed: ${d.detail}</span>`;
+    }
+  } catch(e) {
+    status.innerHTML = `<span class="error">❌ Error: ${e.message}</span>`;
+  }
+}
+
+async function fetchPosts() {
+  const sub = document.getElementById('subreddit').value;
+  const sort = document.getElementById('sort').value;
+  const list = document.getElementById('posts-list');
+  list.innerHTML = '<span class="info">Loading... (sub=' + sub + ', sort=' + sort + ')</span>';
+
+  try {
+    const headers = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    console.log('Fetching posts with headers:', headers);
+    const r = await fetch(`${API}/api/style/posts?subreddit=${sub}&sort=${sort}&limit=10`, { headers });
+    console.log('Response status:', r.status);
+    const d = await r.json();
+    console.log('Response data:', d);
+    posts = d.list || [];
+
+    if (posts.length === 0) {
+      list.innerHTML = '<span class="error">No posts found</span>';
+      return;
+    }
+
+    list.innerHTML = posts.map((p, i) => `
+      <div class="post-item" onclick="selectPost(${i})">
+        <div class="post-title">${p.title}</div>
+        <div class="post-meta">r/${p.subreddit} • ${p.score} votes • ${p.num_comments} comments</div>
+      </div>
+    `).join('');
+  } catch(e) {
+    console.error('Fetch error:', e);
+    list.innerHTML = `<span class="error">Error: ${e.message}</span>`;
+  }
+}
+
+function selectPost(i) {
+  selectedPost = posts[i];
+  document.querySelectorAll('.post-item').forEach((el, j) => {
+    el.classList.toggle('selected', j === i);
+  });
+  document.getElementById('selected-post').innerHTML = `
+    <div class="post-title">${selectedPost.title}</div>
+    <div class="post-meta">${selectedPost.content?.substring(0, 100)}...</div>
+    <hr style="border-color:#343536;margin:10px 0;">
+  `;
+  document.getElementById('comment-section').classList.add('active');
+}
+
+function clearSelection() {
+  selectedPost = null;
+  document.querySelectorAll('.post-item').forEach(el => el.classList.remove('selected'));
+  document.getElementById('comment-section').classList.remove('active');
+  document.getElementById('user-comment').value = '';
+}
+
+async function submitSample() {
+  if (!selectedPost || !token) return;
+  const comment = document.getElementById('user-comment').value.trim();
+  if (!comment) { alert('Please write a comment'); return; }
+
+  try {
+    const r = await fetch(`${API}/api/style/sample`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        post_title: selectedPost.title,
+        post_content: selectedPost.content,
+        post_url: selectedPost.url,
+        user_comment: comment
+      })
+    });
+    const d = await r.json();
+    if (d.success) {
+      alert('✅ Sample submitted!');
+      clearSelection();
+      getProfile();
+    } else {
+      alert('❌ Error: ' + d.message);
+    }
+  } catch(e) {
+    alert('Error: ' + e.message);
+  }
+}
+
+async function getProfile() {
+  if (!token) return;
+  const display = document.getElementById('profile-display');
+
+  try {
+    const r = await fetch(`${API}/api/style/profile`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const d = await r.json();
+
+    if (!d.data?.profile) {
+      display.innerHTML = '<span class="info">No profile yet. Submit 5+ samples to build your style.</span>';
+      return;
+    }
+
+    const p = d.data.profile;
+    display.innerHTML = `
+      <div class="profile-info">
+        <div class="profile-item">
+          <div class="value">${p.sample_count || 0}</div>
+          <div class="label">Samples</div>
+        </div>
+        <div class="profile-item">
+          <div class="value">${p.avg_word_count || 0}</div>
+          <div class="label">Avg Words</div>
+        </div>
+        <div class="profile-item">
+          <div class="value">${(p.formality_score || 0.5).toFixed(1)}</div>
+          <div class="label">Formality</div>
+        </div>
+        <div class="profile-item">
+          <div class="value">${(p.humor_score || 0.3).toFixed(1)}</div>
+          <div class="label">Humor</div>
+        </div>
+        <div class="profile-item">
+          <div class="value">${(p.emoji_usage_rate || 0).toFixed(2)}</div>
+          <div class="label">Emoji Rate</div>
+        </div>
+        <div class="profile-item">
+          <div class="value">${(p.aggression_score || 0.2).toFixed(1)}</div>
+          <div class="label">Aggression</div>
+        </div>
+      </div>
+      <p style="margin-top:15px;color:#818384;">Tone: ${(p.tone_patterns || []).join(', ') || 'N/A'}</p>
+      <p style="margin-top:5px;color:#818384;">Top Words: ${(p.common_words || []).slice(0, 10).join(', ') || 'N/A'}</p>
+    `;
+  } catch(e) {
+    display.innerHTML = `<span class="error">Error: ${e.message}</span>`;
+  }
+}
+
+async function analyzeStyle() {
+  if (!token) return;
+
+  try {
+    const r = await fetch(`${API}/api/style/analyze`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const d = await r.json();
+    alert(d.success ? `✅ ${d.message}` : `❌ ${d.message}`);
+    getProfile();
+  } catch(e) {
+    alert('Error: ' + e.message);
+  }
+}
+
+async function getSamples() {
+  if (!token) {
+    alert('Please login first');
+    return;
+  }
+  const list = document.getElementById('samples-list');
+
+  try {
+    const r = await fetch(`${API}/api/style/samples?limit=20`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const d = await r.json();
+    const samples = d.list || [];
+
+    if (samples.length === 0) {
+      list.innerHTML = '<span class="info">No samples yet</span>';
+      return;
+    }
+
+    list.innerHTML = samples.map(s => `
+      <div style="background:#1a1a1b;padding:10px;border-radius:6px;margin-bottom:8px;">
+        <div style="font-size:12px;color:#818384;margin-bottom:5px;">${s.post_title?.substring(0, 50)}...</div>
+        <div style="color:#d7d7d7;">"${s.user_comment}"</div>
+      </div>
+    `).join('');
+  } catch(e) {
+    list.innerHTML = `<span class="error">Error: ${e.message}</span>`;
+  }
+}
+
+async function testGenerate() {
+  if (!token) { alert('Please login first'); return; }
+  const output = document.getElementById('debug-output');
+  output.textContent = 'Testing...';
+
+  try {
+    const r = await fetch(`${API}/api/comment/generate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        post_content: 'What is your favorite hobby and why?'
+      })
+    });
+    const d = await r.json();
+    output.textContent = JSON.stringify(d, null, 2);
+  } catch(e) {
+    output.textContent = 'Error: ' + e.message;
+  }
+}
+
+// Auto login on load
+(async () => {
+  await login();
+  await fetchPosts();
+})();
+</script>
+</body>
+</html>
