@@ -13,7 +13,6 @@ import os
 import subprocess
 import time
 import shutil
-import tempfile
 import hashlib
 
 IS_WINDOWS = os.name == 'nt'
@@ -43,6 +42,7 @@ REQUIRED_PACKAGES = [
 
 MYSQL_PORT = "3307"
 REDIS_PORT = "16379"
+BACKEND_PORT = "8000"
 
 def print_banner():
     print()
@@ -153,11 +153,23 @@ def check_docker():
 
     return False
 
+def get_api_key():
+    """Prompt user for DeepSeek API key."""
+    print()
+    print("=" * 50)
+    print("  DeepSeek API Key")
+    print("=" * 50)
+    print()
+    print("You need a DeepSeek API key for AI features.")
+    print("Get one free at: https://platform.deepseek.com/")
+    print()
+    api_key = input("Enter your DeepSeek API key (or press Enter to skip): ").strip()
+    return api_key
+
 def start_infrastructure():
     """Start MySQL and Redis containers."""
     log_info("Starting MySQL and Redis containers...")
 
-    # MySQL container
     result = subprocess.run(
         ["docker", "ps", "-a", "--format", "{{.Names}}"],
         capture_output=True,
@@ -183,7 +195,6 @@ def start_infrastructure():
         subprocess.run(["docker", "start", f"{APP_NAME}-mysql"],
                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-    # Redis container
     if f"{APP_NAME}-redis" not in containers:
         log_info("Creating Redis container...")
         subprocess.run([
@@ -196,7 +207,6 @@ def start_infrastructure():
         subprocess.run(["docker", "start", f"{APP_NAME}-redis"],
                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-    # Wait for MySQL
     log_info("Waiting for MySQL...")
     for _ in range(30):
         result = subprocess.run(
@@ -208,7 +218,6 @@ def start_infrastructure():
             break
         time.sleep(1)
 
-    # Initialize database
     log_info("Initializing database...")
     subprocess.run([
         "docker", "exec", f"{APP_NAME}-mysql", "mariadb",
@@ -253,13 +262,12 @@ def create_virtualenv():
 
     log_info("Dependencies installed")
 
-def create_config():
+def create_config(api_key):
     """Create .env configuration file."""
     log_info("Creating configuration...")
 
     os.makedirs(INSTALL_DIR, exist_ok=True)
 
-    # Generate random JWT secret
     jwt_secret = hashlib.sha256(str(time.time()).encode()).hexdigest()
 
     env_content = f"""# Database
@@ -275,24 +283,13 @@ REDIS_PORT={REDIS_PORT}
 REDIS_DB=0
 
 # JWT
-JWT_SECRET_KEY={jwt_secret}
-JWT_ACCESS_TOKEN_EXPIRE_MINUTES=1440
+JWT_SECRET={jwt_secret}
+JWT_EXPIRATION_MINUTES=1440
 
 # DeepSeek (LLM)
-DEEPSEEK_API_KEY=
-DEEPSEEK_API_BASE=https://api.deepseek.com
+DEEPSEEK_API_KEY={api_key}
+DEEPSEEK_BASE_URL=https://api.deepseek.com
 DEEPSEEK_MODEL=deepseek-chat
-DEEPSEEK_TIMEOUT=10
-
-# Google OAuth
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-
-# Rate Limiting
-RATE_LIMIT_PER_MINUTE=10
-LLM_CONCURRENT_LIMIT=5
-CIRCUIT_BREAKER_THRESHOLD=5
-CIRCUIT_BREAKER_RECOVERY_SECONDS=60
 
 # App
 APP_NAME=Reddit Comment Assistant
@@ -314,14 +311,14 @@ def get_app_dir():
 def copy_app_files():
     """Copy app files to installation directory."""
     app_dir = get_app_dir()
-    target_app_dir = os.path.join(INSTALL_DIR, "app")
 
-    # Copy app directory
-    if os.path.exists(os.path.join(app_dir, "app")):
+    target_backend_dir = os.path.join(INSTALL_DIR, "backend")
+
+    if os.path.exists(os.path.join(app_dir, "backend")):
         log_info("Copying application files...")
-        if os.path.exists(target_app_dir):
-            shutil.rmtree(target_app_dir)
-        shutil.copytree(os.path.join(app_dir, "app"), target_app_dir)
+        if os.path.exists(target_backend_dir):
+            shutil.rmtree(target_backend_dir)
+        shutil.copytree(os.path.join(app_dir, "backend"), target_backend_dir)
 
 def launch_server():
     """Launch the FastAPI server."""
@@ -339,8 +336,8 @@ def launch_server():
     print("  Reddit Comment Assistant")
     print("=" * 50)
     print()
-    print("  API Server: http://localhost:8000")
-    print("  API Docs:   http://localhost:8000/docs")
+    print("  API Server: http://localhost:" + BACKEND_PORT)
+    print("  API Docs:   http://localhost:" + BACKEND_PORT + "/docs")
     print()
     print("  Press Ctrl+C to stop")
     print("=" * 50)
@@ -350,7 +347,7 @@ def launch_server():
         python_path, "-m", "uvicorn",
         "app.main:app",
         "--host", "0.0.0.0",
-        "--port", "8000"
+        "--port", BACKEND_PORT
     ])
 
 def main():
@@ -364,9 +361,10 @@ def main():
         input("Press Enter to exit...")
         sys.exit(1)
 
+    api_key = get_api_key()
     start_infrastructure()
     create_virtualenv()
-    create_config()
+    create_config(api_key)
     copy_app_files()
     launch_server()
 

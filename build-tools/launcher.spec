@@ -12,8 +12,9 @@ a = Analysis(
     pathex=[os.path.abspath('.')],
     binaries=[],
     datas=[
-        ('../app', 'app'),
-        ('../requirements.txt', '.'),
+        ('../backend/app', 'app'),
+        ('../backend/requirements.txt', '.'),
+        ('../backend/.env', '.'),
     ],
     hiddenimports=[
         'uvicorn',
@@ -67,7 +68,6 @@ exe = EXE(
     target_arch='x86_64',
     codesign_identity=None,
     entitlements_file=None,
-    icon='../build-tools/app.ico',
 )
 
 coll = COLLECT(
