@@ -2,20 +2,9 @@
   "manifest_version": 3,
   "name": "Reddit Comment Assistant",
   "version": "1.0.0",
-  "description": "AI-powered Reddit comment generation tool for marketers",
-  "permissions": [
-    "activeTab",
-    "storage",
-    "notifications",
-    "contextMenus"
-  ],
-  "host_permissions": [
-    "https://www.reddit.com/*",
-    "https://old.reddit.com/*",
-    "http://localhost:8000/*",
-    "http://localhost:3307/*",
-    "http://localhost:16379/*"
-  ],
+  "description": "AI-powered Reddit comment generation tool",
+  "permissions": ["activeTab", "storage", "contextMenus"],
+  "host_permissions": ["https://*.reddit.com/*", "http://localhost:8000/*"],
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
@@ -29,9 +18,8 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://www.reddit.com/*", "https://old.reddit.com/*"],
-      "js": ["content.js"],
-      "run_at": "document_idle"
+      "matches": ["https://*.reddit.com/*"],
+      "js": ["content.js"]
     }
   ],
   "icons": {

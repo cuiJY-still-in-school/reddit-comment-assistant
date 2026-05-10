@@ -5,6 +5,7 @@ let state = {
   token: null,
   user: null,
   personas: [],
+  apiKey: null,
   services: {
     docker: false,
     mysql: false,
@@ -22,6 +23,7 @@ async function initializeApp() {
   setupEventListeners();
   await checkServiceStatus();
   await loadSelectedText();
+  loadApiKey();
 
   if (state.token) {
     showAppSection();
@@ -29,6 +31,20 @@ async function initializeApp() {
   } else {
     showLoginSection();
   }
+}
+
+function loadApiKey() {
+  chrome.storage.local.get(['apiKey'], (result) => {
+    if (result.apiKey) {
+      state.apiKey = result.apiKey;
+      document.getElementById('api-key').value = result.apiKey;
+    }
+  });
+}
+
+function saveApiKey(key) {
+  state.apiKey = key;
+  chrome.storage.local.set({ apiKey: key });
 }
 
 async function loadSelectedText() {
@@ -108,6 +124,17 @@ function setupEventListeners() {
   document.getElementById('btn-cancel-persona').addEventListener('click', hidePersonaModal);
   document.getElementById('btn-save-persona').addEventListener('click', createPersona);
   document.getElementById('btn-generate').addEventListener('click', handleGenerateComments);
+  document.getElementById('btn-save-api-key').addEventListener('click', handleSaveApiKey);
+}
+
+function handleSaveApiKey() {
+  const apiKey = document.getElementById('api-key').value.trim();
+  if (apiKey) {
+    saveApiKey(apiKey);
+    showMessage('API key saved!', 'success');
+  } else {
+    showMessage('Please enter a valid API key', 'error');
+  }
 }
 
 async function handleStartServices() {
@@ -122,10 +149,6 @@ async function handleStartServices() {
   btn.disabled = true;
 
   try {
-    // Launch the Python launcher which starts all services
-    showMessage('Starting services... This may take a moment.', 'info');
-
-    // Try to start via the launcher script
     const response = await fetch('http://localhost:8000/health');
     if (response.ok) {
       state.services.api = true;
@@ -133,8 +156,7 @@ async function handleStartServices() {
       showMessage('API already running!', 'success');
     }
   } catch (e) {
-    // API not running, we need to launch it
-    showMessage('API not responding. Please ensure backend is running: uvicorn app.main:app --port 8000', 'error', 8000);
+    showMessage('API not responding. Please ensure backend is running', 'error', 8000);
   }
 
   btn.disabled = false;
@@ -163,12 +185,12 @@ async function handleEmailLogin() {
 
     const data = await response.json();
 
-    if (!response.ok) {
-      throw new Error(data.detail || 'Login failed');
+    if (data.success === false) {
+      throw new Error(data.message || 'Login failed');
     }
 
-    state.token = data.access_token;
-    state.user = data.user;
+    state.token = data.data.token;
+    state.user = data.data.user;
     saveState();
     showAppSection();
     await loadPersonas();
@@ -200,8 +222,8 @@ async function handleRegister() {
 
     const data = await response.json();
 
-    if (!response.ok) {
-      throw new Error(data.detail || 'Registration failed');
+    if (data.success === false) {
+      throw new Error(data.message || 'Registration failed');
     }
 
     errorEl.textContent = 'Registration successful! Please login.';
@@ -225,6 +247,8 @@ function handleLogout() {
 }
 
 async function loadPersonas() {
+  if (!state.token) return;
+
   try {
     const response = await fetch(`${API_BASE}/api/persona/list`, {
       headers: { Authorization: `Bearer ${state.token}` },
@@ -236,7 +260,7 @@ async function loadPersonas() {
     }
 
     const data = await response.json();
-    state.personas = data.list || [];
+    state.personas = data.data || [];
 
     const select = document.getElementById('persona-select');
     select.innerHTML = '<option value="">No Persona (Default)</option>';
@@ -290,8 +314,8 @@ async function createPersona() {
 
     const data = await response.json();
 
-    if (!response.ok) {
-      throw new Error(data.detail || 'Failed to create persona');
+    if (data.success === false) {
+      throw new Error(data.message || 'Failed to create persona');
     }
 
     hidePersonaModal();
@@ -344,11 +368,11 @@ async function handleGenerateComments() {
 
     const data = await response.json();
 
-    if (!response.ok) {
-      throw new Error(data.detail || 'Generation failed');
+    if (data.success === false) {
+      throw new Error(data.message || 'Generation failed');
     }
 
-    renderComments(data.list);
+    renderComments(data.data.list || []);
     commentsSection.classList.remove('hidden');
     showMessage('Comments generated successfully!', 'success');
   } catch (error) {

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reddit Comment Assistant</title>
+  <link rel="stylesheet" href="./popup.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <div class="status-item" id="status-api">
+        <span class="status-dot stopped"></span>
+        <span>API</span>
+      </div>
+      <div class="status-item" id="status-mysql">
+        <span class="status-dot stopped"></span>
+        <span>MySQL</span>
+      </div>
+      <div class="status-item" id="status-redis">
+        <span class="status-dot stopped"></span>
+        <span>Redis</span>
+      </div>
+      <button class="btn btn-start" id="btn-start-all">▶ Start All</button>
+    </div>
+
+    <!-- API Key Section -->
+    <div class="section">
+      <h3>🔑 DeepSeek API Key</h3>
+      <div style="display: flex; gap: 8px;">
+        <input type="password" id="api-key" class="input" placeholder="Enter your DeepSeek API key" style="flex: 1; margin-bottom: 0;">
+        <button class="btn secondary small" id="btn-save-api-key">Save</button>
+      </div>
+      <p class="hint">Get your API key from <a href="https://platform.deepseek.com/" target="_blank">platform.deepseek.com</a></p>
+    </div>
+
+    <!-- Login Section -->
+    <div id="login-section" class="section hidden">
+      <h2>Login / Register</h2>
+      <input type="email" id="login-email" class="input" placeholder="Email" value="shortsubjayfire@gmail.com">
+      <input type="password" id="login-password" class="input" placeholder="Password" value="cuiJY20130111">
+      <button class="btn primary" id="btn-login">Login</button>
+      <button class="btn secondary" id="btn-register" style="margin-top: 8px;">Register</button>
+      <div id="login-error" class="error hidden"></div>
+    </div>
+
+    <!-- App Section -->
+    <div id="app-section" class="section">
+      <div class="user-info">
+        <span>Logged in as <strong id="user-email">user@example.com</strong></span>
+        <button class="btn small secondary" id="btn-logout">Logout</button>
+      </div>
+
+      <!-- Persona Section -->
+      <div class="persona-section">
+        <h3>Persona</h3>
+        <select id="persona-select" class="select">
+          <option value="">No Persona (Default)</option>
+        </select>
+        <button class="btn small secondary" id="btn-add-persona">+ Add</button>
+        <button class="btn small secondary" id="btn-refresh-personas">↻</button>
+      </div>
+
+      <!-- Post Section -->
+      <div class="post-section">
+        <h3>Post Content</h3>
+        <textarea id="post-content" class="textarea" placeholder="Enter post content or right-click selected text on Reddit"></textarea>
+        <input type="text" id="post-permalink" class="input" placeholder="Permalink (optional)">
+        <button class="btn primary" id="btn-generate">✨ Generate Comments</button>
+      </div>
+
+      <!-- Loading -->
+      <div id="loading" class="loading hidden">
+        <div class="spinner"></div>
+        <span>Generating...</span>
+      </div>
+
+      <!-- Comments Section -->
+      <div id="comments-section" class="section hidden">
+        <h3>Generated Comments</h3>
+        <div id="comments-list" class="comments-list"></div>
+      </div>
+    </div>
+
+    <!-- Message -->
+    <div id="message" class="message hidden"></div>
+  </div>
+
+  <!-- Persona Modal -->
+  <div id="persona-modal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Create Persona</h3>
+      <input type="text" id="persona-name" class="input" placeholder="Persona name">
+      <textarea id="persona-description" class="textarea" placeholder="Persona description (style, tone, role)"></textarea>
+      <div class="modal-buttons">
+        <button class="btn secondary" id="btn-cancel-persona">Cancel</button>
+        <button class="btn primary" id="btn-save-persona">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="./popup.ts"></script>
+</body>
+</html>
