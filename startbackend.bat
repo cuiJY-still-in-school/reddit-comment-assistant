@@ -7,7 +7,8 @@ echo   Reddit Comment Assistant - Backend
 echo ==========================================
 echo.
 
-set "BACKEND_DIR=%~dp0backend"
+set "SCRIPT_DIR=%~dp0"
+set "BACKEND_DIR=%SCRIPT_DIR%backend"
 
 if not exist "%BACKEND_DIR%" (
     echo [ERROR] Backend directory not found: %BACKEND_DIR%
@@ -28,9 +29,18 @@ if not exist "venv" (
 echo [INFO] Activating virtual environment...
 call venv\Scripts\activate.bat
 
+:: Install dependencies
+echo [INFO] Installing dependencies...
+pip install --quiet --upgrade pip
+pip install --quiet -r requirements.txt
+if errorlevel 1 (
+    echo [INFO] Trying individual packages...
+    pip install fastapi uvicorn sqlalchemy aiomysql redis PyJWT bcrypt pydantic pydantic-settings python-dotenv httpx python-multipart email-validator passlib
+)
+
 :: Check .env file
 if not exist ".env" (
-    echo [WARN] Creating default .env file...
+    echo [INFO] Creating default .env file...
     (
         echo MYSQL_HOST=127.0.0.1
         echo MYSQL_PORT=3307
@@ -51,18 +61,15 @@ if not exist ".env" (
 )
 
 :: Check API key
-findstr /C:"DEEPSEEK_API_KEY=" .env >nul
+findstr /C:"DEEPSEEK_API_KEY=" .env | findstr /v "#" >nul
 if errorlevel 1 (
     echo.
     echo ==========================================
     echo   DeepSeek API Key Required
     echo ==========================================
     echo Please add your DeepSeek API key to backend\.env
-    echo DEEPSEEK_API_KEY=your-key-here
-    echo.
     echo Get your API key at: https://platform.deepseek.com/
     echo.
-    pause
 )
 
 echo [INFO] Starting backend server...

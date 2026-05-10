@@ -8,7 +8,8 @@ echo "  Reddit Comment Assistant - Backend"
 echo "=========================================="
 echo ""
 
-BACKEND_DIR="$(dirname "$0")/backend"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+BACKEND_DIR="$SCRIPT_DIR/backend"
 
 if [ ! -d "$BACKEND_DIR" ]; then
     echo "[ERROR] Backend directory not found: $BACKEND_DIR"
@@ -27,9 +28,14 @@ fi
 echo "[INFO] Activating virtual environment..."
 source venv/bin/activate
 
+# Install dependencies
+echo "[INFO] Installing Python dependencies..."
+pip install --upgrade pip
+pip install -r requirements.txt
+
 # Check .env file
 if [ ! -f ".env" ]; then
-    echo "[WARN] .env file not found, creating default..."
+    echo "[INFO] Creating default .env file..."
     cat > .env << 'EOF'
 MYSQL_HOST=127.0.0.1
 MYSQL_PORT=3307
@@ -50,14 +56,14 @@ EOF
 fi
 
 # Check for DeepSeek API key
-source .env 2>/dev/null
-if [ -z "$DEEPSEEK_API_KEY" ] || [ "$DEEPSEEK_API_KEY" == "your-deepseek-api-key-here" ]; then
+DEEPSEEK_API_KEY=$(grep DEEPSEEK_API_KEY .env 2>/dev/null | cut -d'=' -f2 | tr -d '"' | tr -d "'")
+if [ -z "$DEEPSEEK_API_KEY" ]; then
     echo ""
     echo "=========================================="
     echo "  DeepSeek API Key Required"
     echo "=========================================="
     echo "Please add your DeepSeek API key to backend/.env"
-    echo "DEEPSEEK_API_KEY=your-key-here"
+    echo "DEEPSEEK_API_KEY=sk-your-key-here"
     echo ""
     echo "Get your API key at: https://platform.deepseek.com/"
     echo ""
